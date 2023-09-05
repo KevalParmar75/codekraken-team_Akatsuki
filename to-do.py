@@ -1,52 +1,78 @@
 Python 3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)] on win32
 Type "help", "copyright", "credits" or "license()" for more information.
->>> pip install tkinter openai
-... import tkinter as tk
-... import openai
-... 
-... # Replace with your OpenAI GPT-3 API key
-... api_key = "YOUR_API_KEY"
-... openai.api_key = api_key
-... 
-... def generate_task_suggestion(task_description):
-...     response = openai.Completion.create(
-...         engine="text-davinci-002",
-...         prompt=f"Suggest a task related to: {task_description}\n",
-...         max_tokens=30,
-...         n=1,
-...         stop=None,
-...         temperature=0.7,
-...     )
-...     return response.choices[0].text.strip()
-... 
-... def add_task():
-...     task_description = entry.get()
-...     if task_description:
-...         suggestion = generate_task_suggestion(task_description)
-...         task_list.insert(tk.END, suggestion)
-...         entry.delete(0, tk.END)
-... 
-... def remove_task():
-...     selected_task_index = task_list.curselection()
-...     if selected_task_index:
-...         task_list.delete(selected_task_index)
-... 
-... # Create the main window
-... root = tk.Tk()
-... root.title("To-Do Application")
-... 
-... # Create and configure widgets
-... entry = tk.Entry(root, width=50)
-add_button = tk.Button(root, text="Add Task", command=add_task)
-remove_button = tk.Button(root, text="Remove Task", command=remove_task)
-task_list = tk.Listbox(root, selectmode=tk.SINGLE, width=60)
+>>> 
+import tkinter as tk
+from tkinter import messagebox
 
-# Place widgets in the window
+import openai
+
+# Initialize your OpenAI GPT-3 API key
+openai.api_key = 'your api key'
+
+# Create a chat function using GPT-3
+def chat_with_gpt(input_text):
+    response = openai.Completion.create(
+        engine="text-davinci-002",
+        prompt=input_text,
+        max_tokens=50
+    )
+    return response.choices[0].text.strip()
+
+# Create the main application window
+app = tk.Tk()
+app.title("To-Do App with Chat")
+
+# To-Do List
+tasks = []
+
+# Function to add a task
+def add_task():
+    task = entry.get()
+    if task:
+        tasks.append(task)
+        listbox.insert(tk.END, task)
+        entry.delete(0, tk.END)
+    else:
+        messagebox.showwarning("Warning", "Please enter a task!")
+
+# Function to delete a task
+def delete_task():
+    selected_task = listbox.curselection()
+    if selected_task:
+        index = selected_task[0]
+        listbox.delete(index)
+        tasks.pop(index)
+    else:
+        messagebox.showwarning("Warning", "Please select a task to delete!")
+
+# Function to get task suggestions from GPT-3
+def get_task_suggestions():
+    input_text = "I need suggestions for my to-do list. My current tasks are: " + ", ".join(tasks)
+    suggestion = chat_with_gpt(input_text)
+    entry.insert(tk.END, suggestion)
+
+# Create and configure widgets
+frame = tk.Frame(app)
+frame.pack(pady=10)
+
+label = tk.Label(frame, text="To-Do List:")
+label.pack()
+
+listbox = tk.Listbox(frame, selectmode=tk.SINGLE)
+listbox.pack()
+
+entry = tk.Entry(frame, width=40)
 entry.pack()
-add_button.pack()
-remove_button.pack()
-task_list.pack()
 
-# Start the application
-root.mainloop()
+add_button = tk.Button(frame, text="Add Task", command=add_task)
+add_button.pack()
+
+delete_button = tk.Button(frame, text="Delete Task", command=delete_task)
+delete_button.pack()
+
+get_suggestions_button = tk.Button(frame, text="Get Task Suggestions", command=get_task_suggestions)
+get_suggestions_button.pack()
+
+# Main loop
+app.mainloop()
 
